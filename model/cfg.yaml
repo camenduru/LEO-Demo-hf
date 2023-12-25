@@ -1,0 +1,21 @@
+use_ckpt: hf
+hf_ckpt_path: [huangjy-pku/embodied-generalist, weights/leo_noact_hf.pth]
+local_ckpt_path: /mnt/huangjiangyong/leo/hf_assets/weights/leo_noact_lora.pth
+model:
+  name: LeoAgentLLM
+  # vision modules omitted
+  llm:
+    name: Vicuna7B
+    use_ckpt: hf
+    hf_cfg_path: huangjy-pku/vicuna-7b
+    local_cfg_path: /mnt/huangjiangyong/vicuna-7b
+    truncation_side: right
+    prompt: ""
+    max_out_len: 256
+    max_context_len: 256   # for prompt_after_obj
+    lora:
+      flag: True
+      rank: 16
+      alpha: 16
+      target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
+      dropout: 0.0
