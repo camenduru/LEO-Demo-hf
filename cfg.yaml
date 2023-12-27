@@ -1,4 +1,5 @@
-use_ckpt: hf
+launch_mode: hf   # hf or local
+hf_log_path: embodied-generalist/leo_demo_log
 hf_ckpt_path: [huangjy-pku/embodied-generalist, weights/leo_noact_hf.pth]
 local_ckpt_path: /mnt/huangjiangyong/leo/hf_assets/weights/leo_noact_lora.pth
 model:
@@ -6,7 +7,6 @@ model:
   # vision modules omitted
   llm:
     name: Vicuna7B
-    use_ckpt: hf
     hf_cfg_path: huangjy-pku/vicuna-7b
     local_cfg_path: /mnt/huangjiangyong/vicuna-7b
     truncation_side: right

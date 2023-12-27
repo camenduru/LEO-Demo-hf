@@ -14,16 +14,13 @@ def disabled_train(self, mode=True):
 class LeoAgentLLM(nn.Module):
     def __init__(self, cfg):
         super().__init__()
-        if hasattr(cfg, 'model'):
-            cfg = cfg.model
-
         # LLM
-        if cfg.llm.use_ckpt == 'hf':
-            llm_cfg_path = snapshot_download(cfg.llm.hf_cfg_path)
+        if cfg.launch_mode == 'hf':
+            llm_cfg_path = snapshot_download(cfg.model.llm.hf_cfg_path)
         else:
-            llm_cfg_path = cfg.llm.local_cfg_path
+            llm_cfg_path = cfg.model.llm.local_cfg_path
         self.llm_tokenizer = LlamaTokenizer.from_pretrained(llm_cfg_path, use_fast=False,
-                                                            truncation_side=cfg.llm.truncation_side)
+                                                            truncation_side=cfg.model.llm.truncation_side)
         self.llm_tokenizer.add_special_tokens({'pad_token': '[PAD]'})
         self.llm_tokenizer.add_special_tokens({'bos_token': '<s>'})
         self.llm_tokenizer.add_special_tokens({'eos_token': '</s>'})
@@ -37,18 +34,18 @@ class LeoAgentLLM(nn.Module):
         self.llm_model.train = disabled_train
 
         # LoRA-based LLM fine-tuning
-        if cfg.llm.lora.flag:
+        if cfg.model.llm.lora.flag:
             lora_config = LoraConfig(
-                r=cfg.llm.lora.rank,
-                lora_alpha=cfg.llm.lora.alpha,
-                target_modules=cfg.llm.lora.target_modules,
-                lora_dropout=cfg.llm.lora.dropout,
+                r=cfg.model.llm.lora.rank,
+                lora_alpha=cfg.model.llm.lora.alpha,
+                target_modules=cfg.model.llm.lora.target_modules,
+                lora_dropout=cfg.model.llm.lora.dropout,
                 bias='none',
                 modules_to_save=[],
             )
             self.llm_model = get_peft_model(self.llm_model, peft_config=lora_config)
 
-        self.max_context_len = cfg.llm.max_context_len
+        self.max_context_len = cfg.model.llm.max_context_len
 
     @property
     def device(self):

@@ -3,11 +3,12 @@ import datetime
 import json
 import os
 import time
+from uuid import uuid4
 
 import gradio as gr
 import torch
 import yaml
-from huggingface_hub import hf_hub_download
+from huggingface_hub import CommitScheduler, hf_hub_download
 from omegaconf import OmegaConf
 
 from model.leo_agent import LeoAgentLLM
@@ -27,33 +28,34 @@ OBJECTS_PROMPT = "Objects (including you) in the scene:"
 TASK_PROMPT = "USER: {instruction} ASSISTANT:"
 OBJ_FEATS_DIR = 'assets/obj_features'
 
+with open('cfg.yaml') as f:
+    cfg = yaml.safe_load(f)
+    cfg = OmegaConf.create(cfg)
 
-def load_agent():
-    # build model
-    with open('model/cfg.yaml') as f:
-        cfg = yaml.safe_load(f)
-        cfg = OmegaConf.create(cfg)
-    agent = LeoAgentLLM(cfg)
+# build model
+agent = LeoAgentLLM(cfg)
 
-    # load checkpoint
-    if cfg.use_ckpt == 'hf':
-        ckpt_path = hf_hub_download(cfg.hf_ckpt_path[0], cfg.hf_ckpt_path[1])
-    else:
-        ckpt_path = cfg.local_ckpt_path
-    ckpt = torch.load(ckpt_path, map_location='cpu')
-    agent.load_state_dict(ckpt, strict=False)
+# load checkpoint
+if cfg.launch_mode == 'hf':
+    ckpt_path = hf_hub_download(cfg.hf_ckpt_path[0], cfg.hf_ckpt_path[1])
+else:
+    ckpt_path = cfg.local_ckpt_path
+ckpt = torch.load(ckpt_path, map_location='cpu')
+agent.load_state_dict(ckpt, strict=False)
+agent.eval()
+agent.to(DEVICE)
 
-    agent.eval()
-    agent.to(DEVICE)
-    return agent
+os.makedirs(LOG_DIR, exist_ok=True)
+t = datetime.datetime.now()
+log_fname = os.path.join(LOG_DIR, f'{t.year}-{t.month:02d}-{t.day:02d}-{uuid4()}.json')
 
-agent = load_agent()
-
-
-def get_log_fname():
-    t = datetime.datetime.now()
-    fname = os.path.join(LOG_DIR, f'{t.year}-{t.month:02d}-{t.day:02d}.json')
-    return fname
+if cfg.launch_mode == 'hf':
+    scheduler = CommitScheduler(
+        repo_id=cfg.hf_log_path,
+        repo_type='dataset',
+        folder_path=LOG_DIR,
+        path_in_repo=LOG_DIR,
+    )
 
 
 def change_scene(dropdown_scene: str):
@@ -139,17 +141,28 @@ def vote_response(
         'type': vote_type,
         'scene': dropdown_scene,
         'mode': dropdown_conversation_mode,
-        'dialogue': chatbot,
+        'dialogue': [chatbot[-1]] if 'Single-round' in dropdown_conversation_mode else chatbot,
     }
-    fname = get_log_fname()
-    if os.path.exists(fname):
-        with open(fname) as f:
-            logs = json.load(f)
-        logs.append(this_log)
+
+    if cfg.launch_mode == 'hf':
+        with scheduler.lock:   # use scheduler
+            if os.path.exists(log_fname):
+                with open(log_fname) as f:
+                    logs = json.load(f)
+                logs.append(this_log)
+            else:
+                logs = [this_log]
+            with open(log_fname, 'w') as f:
+                json.dump(logs, f, indent=2)
     else:
-        logs = [this_log]
-    with open(fname, 'w') as f:
-        json.dump(logs, f, indent=2)
+        if os.path.exists(log_fname):
+            with open(log_fname) as f:
+                logs = json.load(f)
+            logs.append(this_log)
+        else:
+            logs = [this_log]
+        with open(log_fname, 'w') as f:
+            json.dump(logs, f, indent=2)
 
 
 def upvote_response(
