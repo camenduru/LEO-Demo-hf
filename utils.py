@@ -15,7 +15,7 @@ from model.leo_agent import LeoAgentLLM
 
 LOG_DIR = 'logs'
 MESH_DIR = 'assets/scene_meshes'
-MESH_NAMES = [os.path.splitext(fname)[0] for fname in os.listdir(MESH_DIR)]
+MESH_NAMES = sorted([os.path.splitext(fname)[0] for fname in os.listdir(MESH_DIR)])
 ENABLE_BUTTON = gr.update(interactive=True)
 DISABLE_BUTTON = gr.update(interactive=False)
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -25,7 +25,6 @@ ROLE_PROMPT = "You are an AI visual assistant situated in a 3D scene. "\
               "You should properly respond to the USER's instruction according to the given visual information. "
 EGOVIEW_PROMPT = "Ego-view image:"
 OBJECTS_PROMPT = "Objects (including you) in the scene:"
-TASK_PROMPT = "USER: {instruction} ASSISTANT:"
 OBJ_FEATS_DIR = 'assets/obj_features'
 
 with open('cfg.yaml') as f:
@@ -50,11 +49,13 @@ t = datetime.datetime.now()
 log_fname = os.path.join(LOG_DIR, f'{t.year}-{t.month:02d}-{t.day:02d}-{uuid4()}.json')
 
 if cfg.launch_mode == 'hf':
+    access_token = os.environ['LOG_ACCESS_TOKEN']
     scheduler = CommitScheduler(
         repo_id=cfg.hf_log_path,
         repo_type='dataset',
         folder_path=LOG_DIR,
         path_in_repo=LOG_DIR,
+        token=access_token,
     )
 
 
