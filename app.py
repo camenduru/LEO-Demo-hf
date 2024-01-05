@@ -16,12 +16,12 @@ with gr.Blocks(title='LEO Demo') as demo:
         with gr.Column(scale=5):
             dropdown_scene = gr.Dropdown(
                 choices=MESH_NAMES,
-                value=MESH_NAMES[0],
+                value=MESH_NAMES[3],
                 interactive=True,
                 label='Select a 3D scene',
             )
             model_3d = gr.Model3D(
-                value=os.path.join(MESH_DIR, f'{MESH_NAMES[0]}.glb'),
+                value=os.path.join(MESH_DIR, f'{MESH_NAMES[3]}.glb'),
                 clear_color=[0.0, 0.0, 0.0, 0.0],
                 label='3D Scene',
                 camera_position=(90, 30, 10),
@@ -60,11 +60,12 @@ with gr.Blocks(title='LEO Demo') as demo:
                 with gr.Accordion(label="Examples for user instruction:", open=True):
                     gr.Examples(
                         examples=[
-                            ["How many armchairs are there in this room?"],
-                            ["Is there a radio in the room?"],
-                            ["Where is the wardrobe located?TODO"],
-                            ["What is the shape of the shelf in front of the picture?TODO"],
-                            ["Plan for the task: Tidy up and arrange the nursery room.TODO"],
+                            ["What color is the floor?"],
+                            ["Is there a blackboard in the room?"],
+                            ["How many chairs are there in this room?"],
+                            ["Describe this scene."],
+                            ["What is this room used for?"],
+                            ["Plan for the task: tidy up and arrange this room."],
                        ],
                         inputs=user_chat_input,
                     )
