@@ -1,7 +1,7 @@
 launch_mode: hf   # hf or local
 hf_log_path: embodied-generalist/leo_demo_log
 hf_ckpt_path: [huangjy-pku/embodied-generalist, weights/leo_noact_hf.pth]
-local_ckpt_path: /mnt/huangjiangyong/leo/hf_assets/weights/leo_noact_lora.pth
+local_ckpt_path: /mnt/huangjiangyong/leo/hf_assets/weights/leo_noact_lora_yesno.pth
 model:
   name: LeoAgentLLM
   # vision modules omitted

@@ -16,12 +16,12 @@ with gr.Blocks(title='LEO Demo') as demo:
         with gr.Column(scale=5):
             dropdown_scene = gr.Dropdown(
                 choices=MESH_NAMES,
-                value=MESH_NAMES[3],
+                value='3RScan-Office',
                 interactive=True,
                 label='Select a 3D scene',
             )
             model_3d = gr.Model3D(
-                value=os.path.join(MESH_DIR, f'{MESH_NAMES[3]}.glb'),
+                value=os.path.join(MESH_DIR, f'3RScan-Office.glb'),
                 clear_color=[0.0, 0.0, 0.0, 0.0],
                 label='3D Scene',
                 camera_position=(90, 30, 10),
